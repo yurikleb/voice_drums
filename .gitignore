@@ -1,0 +1,29 @@
+# Ignore build files and output folders
+build/
+bin/
+*.hex
+*.elf
+
+# Ignore Arduino IDE specific files
+*.ino.cpp
+*.ino.hex
+*.ino.elf
+*.ino.eep
+*.ino.map
+*.ino.sym
+
+# Ignore Arduino library dependencies
+libraries/
+
+# Ignore user-specific settings
+*.local.txt
+*.user.txt
+
+# Ignore media files
+media/
+
+# macosx specific files
+.DS_Store
+
+# vscode specific files
+.vscode/
