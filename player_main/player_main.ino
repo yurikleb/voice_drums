@@ -26,7 +26,7 @@ int sensorPin = A0;  // select the input pin for the potentiometer
 int sensorValue = 0; // variable to store the value coming from th
 
 // Buttons Setup:
-int buttonPin = 1;   // the number of the pushbutton pin
+int trackButtonPin = 8;   // the number of the pushbutton pin
 int buttonState = 0; // variable for reading the pushbutton status
 
 // LEDs Setup:
@@ -77,6 +77,12 @@ void setup() {
   // Set volume for left, right channels. lower numbers == louder volume!
   musicPlayer.setVolume(volume, volume);
 
+  // Configure buttons pins
+  pinMode(trackButtonPin, INPUT_PULLUP);
+  
+  // pin 13 LED to testing:
+  pinMode(ledPin, OUTPUT);
+
   /***** Two interrupt options! *******/
   // This option uses timer0, this means timer1 & t2 are not required
   // (so you can use 'em for Servos, etc) BUT millis() can lose time
@@ -97,6 +103,27 @@ void loop() {
   // This doesn't happen in the background, instead, the entire
   // file is played and the program will continue when it's done!
   // musicPlayer.playFullFile("track001.ogg");
+
+  // CHANGE SONG
+  if (digitalRead(trackButtonPin) == LOW) {
+    
+    musicPlayer.stopPlaying();
+    if(tackDirsFileCount[playFolder + 1] > 0 && playFolder < maxTracks - 1) {
+      playFolder++;
+    } 
+    else {
+      playFolder = 1;
+    }
+    
+    track = 1;
+    
+    char filename[13];
+    sprintf(filename, "Changed to Song %02d", playFolder);
+    Serial.println(filename);
+    
+    delay(1000);
+  
+  }
 
   // read the state of the sensorValue:
   sensorValue = analogRead(sensorPin);
