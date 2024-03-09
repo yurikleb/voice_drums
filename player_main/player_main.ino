@@ -1,4 +1,5 @@
 /***************************************************
+Adafruit "Music Maker" MP3 Shield for Arduino w/3W Stereo Amp - v1.0 https://www.adafruit.com/product/1788
 Adafruit VS1053 Codec Breakout:  https://www.adafruit.com/products/1381
 ****************************************************/
 
@@ -23,13 +24,13 @@ Adafruit VS1053 Codec Breakout:  https://www.adafruit.com/products/1381
 
 // Drum Sensor Setup
 #define sensorPin A0  // select the input pin for the potentiometer
-#define drumSensitivity 20 // select the sensitivity of the sensor Higher value = less sensitive
+#define drumSensitivity 40 // select the sensitivity of the sensor Higher value = less sensitive
 int sensorValue = 0; // variable to store the value coming from th
 
 // Buttons Setup:
-#define fullSongButtonPin 8   // a button to play the full song preview
-#define trackButtonPin 9   // a button to change the track
-int buttonState = 0;
+#define drumButtonPin 2   // a button to switch to drum mode
+#define fullSongButtonPin 3   // a button to play the full song preview
+#define trackButtonPin 4   // a button to change the track
 
 // Music Shield Setup
 Adafruit_VS1053_FilePlayer musicPlayer = Adafruit_VS1053_FilePlayer(SHIELD_RESET, SHIELD_CS, SHIELD_DCS, DREQ, CARDCS);
@@ -79,8 +80,9 @@ void setup() {
   musicPlayer.setVolume(volume, volume);
 
   // Configure buttons pins
-  pinMode(trackButtonPin, INPUT_PULLUP);
-  pinMode(fullSongButtonPin, INPUT_PULLUP);
+  musicPlayer.GPIO_pinMode(trackButtonPin, INPUT);
+  musicPlayer.GPIO_pinMode(fullSongButtonPin, INPUT);
+  musicPlayer.GPIO_pinMode(drumButtonPin, INPUT);
   
   // pin 13 LED to testing:
   pinMode(ledPin, OUTPUT);
@@ -106,8 +108,8 @@ void loop() {
   // file is played and the program will continue when it's done!
   // musicPlayer.playFullFile("track001.ogg");
 
-  // CHANGE SONG
-  if (digitalRead(trackButtonPin) == LOW) {
+  // CHANGE SONG TRACK
+  if (musicPlayer.GPIO_digitalRead(trackButtonPin) > 0) {
   
     PlayTrack("/next.mp3");
 
@@ -129,7 +131,7 @@ void loop() {
 
   
   // PLAY FULL SONG
-  if (digitalRead(fullSongButtonPin) == LOW) {
+  if (musicPlayer.GPIO_digitalRead(fullSongButtonPin) > 0) {
     
     char filename[13];
     sprintf(filename, "/%02d_full.mp3", playFolder);
@@ -138,6 +140,15 @@ void loop() {
     track = 1;
     delay(1000);
   
+  }
+
+
+  // SWITCH TO DRUM MODE
+  if (musicPlayer.GPIO_digitalRead(drumButtonPin) > 0) {
+    PlayTrack("/drum.mp3");
+    track = 1;
+    Serial.println("Drum Mode!");
+    delay(1000);
   }
 
 

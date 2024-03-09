@@ -1,4 +1,4 @@
-const int btn_pin = 8;
+const int btn_pin = 10;
 
 void setup() {
   //start serial connection
