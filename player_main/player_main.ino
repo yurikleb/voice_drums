@@ -8,9 +8,9 @@ Adafruit VS1053 Codec Breakout:  https://www.adafruit.com/products/1381
 #include <SPI.h>
 
 // These are the pins used for the breakout example
-#define BREAKOUT_RESET 9 // VS1053 reset pin (output)
-#define BREAKOUT_CS 10   // VS1053 chip select pin (output)
-#define BREAKOUT_DCS 8   // VS1053 Data/command select pin (output)
+// #define BREAKOUT_RESET 9 // VS1053 reset pin (output)
+// #define BREAKOUT_CS 10   // VS1053 chip select pin (output)
+// #define BREAKOUT_DCS 8   // VS1053 Data/command select pin (output)
 // These are the pins used for the music maker shield
 #define SHIELD_RESET -1 // VS1053 reset pin (unused!)
 #define SHIELD_CS 7     // VS1053 chip select pin (output)
@@ -22,15 +22,14 @@ Adafruit VS1053 Codec Breakout:  https://www.adafruit.com/products/1381
 #define DREQ 3 // VS1053 Data request, ideally an Interrupt pin
 
 // Drum Sensor Setup
-int sensorPin = A0;  // select the input pin for the potentiometer
+#define sensorPin A0  // select the input pin for the potentiometer
+#define drumSensitivity 20 // select the sensitivity of the sensor Higher value = less sensitive
 int sensorValue = 0; // variable to store the value coming from th
 
 // Buttons Setup:
-int trackButtonPin = 8;   // the number of the pushbutton pin
-int buttonState = 0; // variable for reading the pushbutton status
-
-// LEDs Setup:
-int ledPin = 13; // the number of the LED pin
+#define fullSongButtonPin 8   // a button to play the full song preview
+#define trackButtonPin 9   // a button to change the track
+int buttonState = 0;
 
 // Music Shield Setup
 Adafruit_VS1053_FilePlayer musicPlayer = Adafruit_VS1053_FilePlayer(SHIELD_RESET, SHIELD_CS, SHIELD_DCS, DREQ, CARDCS);
@@ -45,6 +44,8 @@ int track = 1;
 const byte maxTracks = 10;
 int tackDirsFileCount[maxTracks];
 
+// LEDs Setup:
+#define ledPin 13 // the number of the LED pin
 
 void setup() {
   Serial.begin(9600);
@@ -79,6 +80,7 @@ void setup() {
 
   // Configure buttons pins
   pinMode(trackButtonPin, INPUT_PULLUP);
+  pinMode(fullSongButtonPin, INPUT_PULLUP);
   
   // pin 13 LED to testing:
   pinMode(ledPin, OUTPUT);
@@ -106,8 +108,9 @@ void loop() {
 
   // CHANGE SONG
   if (digitalRead(trackButtonPin) == LOW) {
-    
-    musicPlayer.stopPlaying();
+  
+    PlayTrack("/next.mp3");
+
     if(tackDirsFileCount[playFolder + 1] > 0 && playFolder < maxTracks - 1) {
       playFolder++;
     } 
@@ -117,29 +120,37 @@ void loop() {
     
     track = 1;
     
-    char filename[13];
-    sprintf(filename, "Changed to Song %02d", playFolder);
-    Serial.println(filename);
-    
+    char folderName[13];
+    sprintf(folderName, "Changed to Song %02d", playFolder);
+    Serial.println(folderName);
     delay(1000);
   
   }
 
-  // read the state of the sensorValue:
+  
+  // PLAY FULL SONG
+  if (digitalRead(fullSongButtonPin) == LOW) {
+    
+    char filename[13];
+    sprintf(filename, "/%02d_full.mp3", playFolder);
+    Serial.println(filename);
+    PlayTrack(filename);
+    track = 1;
+    delay(1000);
+  
+  }
+
+
+  // Listen to DRUM SENSOR:
   sensorValue = analogRead(sensorPin);
-  if (sensorValue > 20) {
+  if (sensorValue > drumSensitivity) {
 
     if(tackDirsFileCount[playFolder] > 0) {
       char filename[13];
       sprintf(filename, "/%02d/track%03d.mp3", playFolder, track);
       Serial.println(filename);
 
-      musicPlayer.stopPlaying();
-      delay(10);
-      if (!musicPlayer.startPlayingFile(filename)) {
-        Serial.println("Could not open file");
-        while (1);
-      }
+      PlayTrack(filename);
 
       if (track == tackDirsFileCount[playFolder])
         track = 1;
@@ -161,9 +172,19 @@ void loop() {
     //   Serial.print(".");
     //   delay(10);
     // }
-
-    // Serial.println("Done playing music");
+    // Serial.println("Done playing music");    
   }
+}
+
+void PlayTrack(char track_to_play[13]) {
+
+  musicPlayer.stopPlaying();
+  delay(10);
+  if (!musicPlayer.startPlayingFile(track_to_play)) {
+    Serial.println("Could not open file");
+    while (1);
+  }
+
 }
 
 // Count the number of files in each track directory
