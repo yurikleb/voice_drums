@@ -1,6 +1,5 @@
 /***************************************************
 Adafruit "Music Maker" MP3 Shield for Arduino w/3W Stereo Amp - v1.0 https://www.adafruit.com/product/1788
-Adafruit VS1053 Codec Breakout:  https://www.adafruit.com/products/1381
 ****************************************************/
 
 // include SPI, MP3 and SD libraries
@@ -32,6 +31,11 @@ int sensorValue = 0; // variable to store the value coming from th
 #define fullSongButtonPin 3   // a button to play the full song preview
 #define trackButtonPin 4   // a button to change the track
 
+#define tapDelay 80 // min delay between drum taps
+#define ledDelay 100 // delay between LED blinks when animating
+unsigned long time_now = 0; // time counter
+
+
 // Music Shield Setup
 Adafruit_VS1053_FilePlayer musicPlayer = Adafruit_VS1053_FilePlayer(SHIELD_RESET, SHIELD_CS, SHIELD_DCS, DREQ, CARDCS);
 uint8_t volume = 5;
@@ -47,6 +51,10 @@ int tackDirsFileCount[maxTracks];
 
 // LEDs Setup:
 #define ledPin 13 // the number of the LED pin
+int currentLed = 5; // LED to blink - 3 LEDs connected to GPIO 5, 6, 7
+
+
+
 
 void setup() {
   Serial.begin(9600);
@@ -125,7 +133,18 @@ void loop() {
     char folderName[13];
     sprintf(folderName, "Changed to Song %02d", playFolder);
     Serial.println(folderName);
-    delay(1000);
+  
+    // Blink all LEDS
+    for (uint8_t i=5; i<8; i++) { 
+      musicPlayer.GPIO_pinMode(i, OUTPUT);
+      musicPlayer.GPIO_digitalWrite(i, LOW);
+    }
+    delay(400);
+    for (uint8_t i=5; i<8; i++) { 
+      musicPlayer.GPIO_pinMode(i, OUTPUT);
+      musicPlayer.GPIO_digitalWrite(i, HIGH);
+    }
+    delay(400);
   
   }
 
@@ -151,6 +170,22 @@ void loop() {
     delay(1000);
   }
 
+  // Animate Leds
+  if (track == 1 && musicPlayer.playingMusic == true) {
+
+    musicPlayer.GPIO_pinMode(currentLed, OUTPUT);
+    musicPlayer.GPIO_digitalWrite(currentLed, LOW);
+    
+    if(millis() - time_now > ledDelay) {
+      time_now = millis();
+      musicPlayer.GPIO_digitalWrite(currentLed, HIGH);
+      currentLed++;
+      if (currentLed > 7) {
+        currentLed = 5;
+      }
+    }
+  }
+  
 
   // Listen to DRUM SENSOR:
   sensorValue = analogRead(sensorPin);
@@ -171,8 +206,18 @@ void loop() {
       Serial.println("No files in this track");
     }
     
-
-    delay(10);
+    
+    // turn all LEDs off
+    for (uint8_t i=5; i<8; i++) { 
+      musicPlayer.GPIO_pinMode(i, OUTPUT);
+      musicPlayer.GPIO_digitalWrite(i, HIGH);
+    }
+    // Blink a random LED
+    currentLed = random(5, 8);
+    musicPlayer.GPIO_pinMode(currentLed, OUTPUT);
+    musicPlayer.GPIO_digitalWrite(currentLed, LOW);
+    delay(tapDelay);
+    musicPlayer.GPIO_digitalWrite(currentLed, HIGH);
 
     // Serial.println(filename);
     // Serial.println(F("Started playing"));

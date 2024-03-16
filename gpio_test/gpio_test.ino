@@ -57,9 +57,28 @@ void setup() {
 
 void loop() {  
   // Test GPIO
-  Serial.print("GPIO: "); Serial.println(musicPlayer.GPIO_digitalRead(2));
-  delay(100);
   
+  // Read from GPIO
+  // Serial.print("GPIO: "); Serial.println(musicPlayer.GPIO_digitalRead(2));
+  
+  // Write to GPIO
+  // musicPlayer.GPIO_pinMode(5, OUTPUT);
+  // musicPlayer.GPIO_digitalWrite(5, HIGH);
+  // delay(500);
+  // musicPlayer.GPIO_digitalWrite(5, LOW);
+  // delay(500);
+  // Serial.println("Blink!");
+
+
+  for (uint8_t i=5; i<8; i++) { 
+    musicPlayer.GPIO_pinMode(i, OUTPUT);
+    musicPlayer.GPIO_digitalWrite(i, LOW);
+    delay(100);
+    musicPlayer.GPIO_digitalWrite(i, HIGH);
+    delay(10);  
+  }
+
+
   // for (uint8_t i=0; i<8; i++) { 
   //   musicPlayer.GPIO_pinMode(i, OUTPUT);
     
