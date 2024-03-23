@@ -7,36 +7,30 @@ Adafruit "Music Maker" MP3 Shield for Arduino w/3W Stereo Amp - v1.0 https://www
 #include <SD.h>
 #include <SPI.h>
 
-// These are the pins used for the breakout example
-// #define BREAKOUT_RESET 9 // VS1053 reset pin (output)
-// #define BREAKOUT_CS 10   // VS1053 chip select pin (output)
-// #define BREAKOUT_DCS 8   // VS1053 Data/command select pin (output)
-// These are the pins used for the music maker shield
+// Pins used for the music maker shield
 #define SHIELD_RESET -1 // VS1053 reset pin (unused!)
 #define SHIELD_CS 7     // VS1053 chip select pin (output)
 #define SHIELD_DCS 6    // VS1053 Data/command select pin (output)
-
-// These are common pins between breakout and shield
 #define CARDCS 4 // Card chip select pin
 // DREQ should be an Int pin, see http://arduino.cc/en/Reference/attachInterrupt
 #define DREQ 3 // VS1053 Data request, ideally an Interrupt pin
 
-// Drum Sensor Setup
-#define sensorPin A0  // select the input pin for the potentiometer
-#define drumSensitivity 30 // select the sensitivity of the sensor Higher value = less sensitive
-int sensorValue = 0; // variable to store the value coming from th
-
-// Buttons Setup:
+// Buttons Setup (Connected to GPIO pins on the Music Shield):
 #define drumButtonPin 2   // a button to switch to drum mode
 #define fullSongButtonPin 3   // a button to play the full song preview
 #define trackButtonPin 4   // a button to change the track
+
+// Drum Sensor Setup (A Piezo vibration Sensor):
+#define sensorPin A0  // select the input pin for the potentiometer
+#define drumSensitivity 30 // select the sensitivity of the sensor Higher value = less sensitive
+int sensorValue = 0; // variable to store the value coming from the sensor
 
 #define tapDelay 80 // min delay between drum taps
 unsigned long time_now = 0; // time counter
 
 // LEDs Setup:
 #define ledDelay 100 // delay between LED blinks when animating
-int currentLed = 5; // LED to blink - 3 LEDs connected to GPIO 5, 6, 7
+int currentLed = 5; // LED to blink - 3 LEDs connected to GPIO 5, 6, 7 on the Music Shield
 bool ledsState = false; // LEDs state on or off
 
 // Music Shield Setup
@@ -109,6 +103,7 @@ void setup() {
 
 }
 
+
 void loop() {
   // Alternately, we can just play an entire file at once
   // This doesn't happen in the background, instead, the entire
@@ -146,20 +141,16 @@ void loop() {
     delay(400);
   
   }
-
   
   // PLAY FULL SONG
   if (musicPlayer.GPIO_digitalRead(fullSongButtonPin) > 0) {
-
     char filename[13];
     sprintf(filename, "/%02d_full.mp3", playFolder);
     Serial.println(filename);
     PlayTrack(filename);
     track = 1;
     delay(200);
-  
   }
-
 
   // SWITCH TO DRUM MODE
   if (musicPlayer.GPIO_digitalRead(drumButtonPin) > 0) {
@@ -171,7 +162,6 @@ void loop() {
 
   // Animate Leds
   if (track == 1 && musicPlayer.playingMusic == true) {
-
     ledsState = true;
     musicPlayer.GPIO_pinMode(currentLed, OUTPUT);
     musicPlayer.GPIO_digitalWrite(currentLed, LOW);
@@ -196,7 +186,6 @@ void loop() {
   // Listen to DRUM SENSOR:
   sensorValue = analogRead(sensorPin);
   if (sensorValue > drumSensitivity) {
-
     if(tackDirsFileCount[playFolder] > 0) {
       char filename[13];
       sprintf(filename, "/%02d/track%03d.mp3", playFolder, track);
@@ -212,19 +201,17 @@ void loop() {
       Serial.println("No files in this track");
     }
 
-
     // Blink a random LED
     currentLed = random(5, 8);
     musicPlayer.GPIO_pinMode(currentLed, OUTPUT);
     musicPlayer.GPIO_digitalWrite(currentLed, LOW);
     delay(tapDelay);
     musicPlayer.GPIO_digitalWrite(currentLed, HIGH);
-
-    // Serial.println(filename);
-    // Serial.println(F("Started playing")); 
   }
 }
 
+
+// Play a track
 void PlayTrack(char track_to_play[13]) {
 
   musicPlayer.stopPlaying();
@@ -235,6 +222,7 @@ void PlayTrack(char track_to_play[13]) {
   }
 
 }
+
 
 // Count the number of files in each track directory
 void TracksFileCounter() {
@@ -247,8 +235,8 @@ void TracksFileCounter() {
       dir.close();      
     }
   }
-  
-  // print summary
+
+  // Print summary
   for(int i = 0; i < maxTracks; i++) {
     Serial.print("Track ");
     Serial.print(i);
@@ -256,8 +244,8 @@ void TracksFileCounter() {
     Serial.print(tackDirsFileCount[i]);
     Serial.println(" files");
   }
-
 }
+
 
 // TODO: find abetter way to do the file listing!
 // Count the number of files in a directory
@@ -277,11 +265,11 @@ int countFilesInDirectory(File dir) {
   return fileCount;
 }
 
+
 /// File listing helper
 void printDirectory(File dir, int numTabs) {
 
   while (true) {
-
     File entry = dir.openNextFile();
     if (!entry) {
       // no more files
@@ -302,5 +290,4 @@ void printDirectory(File dir, int numTabs) {
     }
     entry.close();
   }
-    
 }
